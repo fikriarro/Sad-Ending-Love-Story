@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Personal Document Scanner</title>
 
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -42,13 +44,13 @@
 
 <canvas id="canvas"></canvas>
 
-<button onclick="downloadImage()">⬇️ Download Hasil Scan</button>
+<button onclick="downloadPDF()">⬇️ Download PDF</button>
 
 <script>
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
 
-function scan() {
+async function scan() {
   const file = document.getElementById("upload").files[0];
   if (!file) {
     alert("Ambil foto dokumen dulu");
@@ -79,10 +81,29 @@ function scan() {
   reader.readAsDataURL(file);
 }
 
-function downloadImage() {
+async function downloadPDF() {
+  const { PDFDocument } = PDFLib;
+
+  const pdfDoc = await PDFDocument.create();
+
+  const imageBytes = canvas.toDataURL("image/jpeg", 1.0);
+  const jpgImage = await pdfDoc.embedJpg(imageBytes);
+
+  const page = pdfDoc.addPage([jpgImage.width, jpgImage.height]);
+  page.drawImage(jpgImage, {
+    x: 0,
+    y: 0,
+    width: jpgImage.width,
+    height: jpgImage.height,
+  });
+
+  const pdfBytes = await pdfDoc.save();
+
+  const blob = new Blob([pdfBytes], { type: "application/pdf" });
   const link = document.createElement("a");
-  link.download = "scan-dokumen.jpg";
-  link.href = canvas.toDataURL("image/jpeg", 1.0);
+
+  link.href = URL.createObjectURL(blob);
+  link.download = "scan-dokumen.pdf";
   link.click();
 }
 </script>
