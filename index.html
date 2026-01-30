@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ROYYAN DOCUMENT SCANNER</title>
 
-<link href="https://unpkg.com/cropperjs/dist/cropper.css" rel="stylesheet">
+<script async src="https://docs.opencv.org/4.x/opencv.js"></script>
 
 <style>
 body {
@@ -14,32 +14,30 @@ body {
   padding: 15px;
 }
 
-h2 { text-align: center; }
+h2 { text-align:center; }
 
 button {
-  width: 100%;
-  padding: 14px;
-  margin-top: 10px;
-  font-size: 16px;
-  border: none;
-  border-radius: 6px;
-  background: #1e88e5;
-  color: white;
-}
-
-button.secondary {
-  background: #43a047;
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  font-size:16px;
+  border:none;
+  border-radius:6px;
+  background:#1e88e5;
+  color:white;
 }
 
 img {
-  max-width: 100%;
-  margin-top: 12px;
-  border-radius: 6px;
-  display: none;
+  max-width:100%;
+  margin-top:10px;
+  border-radius:6px;
+  display:none;
 }
 
-.section {
-  margin-top: 15px;
+#status {
+  text-align:center;
+  margin-top:10px;
+  font-weight:bold;
 }
 </style>
 </head>
@@ -51,50 +49,39 @@ img {
 <input type="file" accept="image/*" capture="environment" id="cameraInput" hidden>
 <input type="file" accept="image/*" id="galleryInput" hidden>
 
-<div class="section">
-  <button onclick="cameraInput.click()">📷 Ambil dari Kamera</button>
-  <button class="secondary" onclick="galleryInput.click()">🖼️ Ambil dari Galeri</button>
-</div>
+<button onclick="cameraInput.click()">📷 Ambil dari Kamera</button>
+<button onclick="galleryInput.click()">🖼️ Ambil dari Galeri</button>
+
+<p id="status">⏳ Loading engine...</p>
 
 <img id="preview">
+<img id="result">
 
-<div class="section">
-  <button id="cropBtn" disabled>✂️ Crop Dokumen</button>
-</div>
-
-<div class="section">
-  <button id="saveCropBtn" style="display:none;">✅ Simpan Crop</button>
-  <button id="reCropBtn" style="display:none;">🔁 Crop Ulang</button>
-</div>
-
-<div class="section">
-  <p><b>Hasil Crop:</b></p>
-  <img id="result">
-</div>
-
-<script src="https://unpkg.com/cropperjs/dist/cropper.js"></script>
+<button id="autoCropBtn" disabled>✂️ Auto Crop Dokumen</button>
 
 <script>
-let cropper;
-const cameraInput = document.getElementById("cameraInput");
-const galleryInput = document.getElementById("galleryInput");
+let cvReady = false;
+
+function onOpenCvReady() {
+  cvReady = true;
+  document.getElementById("status").innerText = "✅ Engine siap";
+  document.getElementById("autoCropBtn").disabled = false;
+}
+
+if (typeof cv !== "undefined") {
+  cv['onRuntimeInitialized'] = onOpenCvReady;
+}
+
 const preview = document.getElementById("preview");
-const cropBtn = document.getElementById("cropBtn");
-const saveCropBtn = document.getElementById("saveCropBtn");
-const reCropBtn = document.getElementById("reCropBtn");
 const result = document.getElementById("result");
+const autoCropBtn = document.getElementById("autoCropBtn");
 
 function handleFile(file) {
   const reader = new FileReader();
   reader.onload = () => {
     preview.src = reader.result;
     preview.style.display = "block";
-    cropBtn.disabled = false;
     result.style.display = "none";
-    saveCropBtn.style.display = "none";
-    reCropBtn.style.display = "none";
-
-    if (cropper) cropper.destroy();
   };
   reader.readAsDataURL(file);
 }
@@ -102,36 +89,54 @@ function handleFile(file) {
 cameraInput.onchange = e => handleFile(e.target.files[0]);
 galleryInput.onchange = e => handleFile(e.target.files[0]);
 
-cropBtn.onclick = () => {
-  cropper = new Cropper(preview, {
-    viewMode: 1,
-    autoCropArea: 0.9,
-    movable: true,
-    zoomable: true
-  });
-  saveCropBtn.style.display = "block";
-};
+autoCropBtn.onclick = () => {
+  if (!cvReady) return alert("Engine belum siap");
 
-saveCropBtn.onclick = () => {
-  const canvas = cropper.getCroppedCanvas({ imageSmoothingQuality: "high" });
-  result.src = canvas.toDataURL("image/jpeg", 0.85);
-  result.style.display = "block";
+  const img = new Image();
+  img.src = preview.src;
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
 
-  cropper.destroy();
-  cropper = null;
+    let src = cv.imread(canvas);
+    let gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
 
-  saveCropBtn.style.display = "none";
-  reCropBtn.style.display = "block";
-};
+    cv.GaussianBlur(gray, gray, new cv.Size(5,5), 0);
+    cv.Canny(gray, gray, 75, 200);
 
-reCropBtn.onclick = () => {
-  cropper = new Cropper(preview, {
-    viewMode: 1,
-    autoCropArea: 0.9
-  });
+    let contours = new cv.MatVector();
+    let hierarchy = new cv.Mat();
+    cv.findContours(gray, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
-  saveCropBtn.style.display = "block";
-  reCropBtn.style.display = "none";
+    let maxArea = 0;
+    let maxContour = null;
+
+    for (let i = 0; i < contours.size(); i++) {
+      const cnt = contours.get(i);
+      const area = cv.contourArea(cnt);
+      if (area > maxArea) {
+        maxArea = area;
+        maxContour = cnt;
+      }
+    }
+
+    if (!maxContour) {
+      alert("Dokumen tidak terdeteksi");
+      return;
+    }
+
+    const rect = cv.boundingRect(maxContour);
+    const cropped = src.roi(rect);
+
+    cv.imshow(result, cropped);
+    result.style.display = "block";
+
+    src.delete(); gray.delete(); contours.delete(); hierarchy.delete();
+  };
 };
 </script>
 
