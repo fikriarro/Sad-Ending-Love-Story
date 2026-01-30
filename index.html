@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Document Scanner</title>
+<title>Personal Document Scanner</title>
 
 <style>
 body {
@@ -27,6 +27,15 @@ button.secondary {
   background:#6b7280;
 }
 
+input[type=text] {
+  padding:10px;
+  width:90%;
+  max-width:300px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  margin-top:10px;
+}
+
 #preview {
   max-width:100%;
   margin-top:15px;
@@ -46,13 +55,15 @@ canvas {
 
 <body>
 
-<h2> Roy Document Scanner</h2>
+<h2>📄 Personal Document Scanner</h2>
 
 <input type="file" accept="image/*" capture="environment" id="camera" hidden>
 <input type="file" accept="image/*" id="gallery" hidden>
 
 <button onclick="camera.click()">📷 Kamera</button>
 <button onclick="gallery.click()">🖼️ Galeri</button>
+
+<br>
 
 <img id="preview">
 
@@ -65,11 +76,17 @@ canvas {
 </div>
 
 <br>
-<button class="secondary" onclick="savePage()" id="saveBtn" style="display:none">
+
+<button class="secondary" id="saveBtn" style="display:none" onclick="savePage()">
 Simpan Halaman
 </button>
 
+<br>
+
+<input type="text" id="filename" placeholder="Nama dokumen (opsional)">
+
 <br><br>
+
 <button onclick="downloadPDF()">Download PDF</button>
 
 <p id="count">0 halaman</p>
@@ -91,26 +108,26 @@ let pages = [];
 camera.onchange = handleFile;
 gallery.onchange = handleFile;
 
-function handleFile(e) {
+function handleFile(e){
   const file = e.target.files[0];
-  if (!file) return;
+  if(!file) return;
 
   const reader = new FileReader();
   reader.onload = ev => {
     originalImage.src = ev.target.result;
     preview.src = ev.target.result;
-    preview.style.display = "block";
-    document.getElementById("filters").style.display = "block";
-    document.getElementById("saveBtn").style.display = "inline-block";
+    preview.style.display="block";
+    document.getElementById("filters").style.display="block";
+    document.getElementById("saveBtn").style.display="inline-block";
   };
   reader.readAsDataURL(file);
 }
 
-function applyFilter(type) {
+function applyFilter(type){
   canvas.width = 794;
   canvas.height = 1123;
 
-  ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(originalImage,0,0,canvas.width,canvas.height);
   let img = ctx.getImageData(0,0,canvas.width,canvas.height);
   let d = img.data;
 
@@ -155,13 +172,21 @@ function downloadPDF(){
     return;
   }
 
+  let name = document.getElementById("filename").value.trim();
+
+  if(name===""){
+    const d = new Date();
+    name = `scan-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}-${d.getHours()}-${d.getMinutes()}`;
+  }
+
   const pdf = new jspdf.jsPDF("p","pt","a4");
+
   pages.forEach((img,i)=>{
     if(i>0) pdf.addPage();
     pdf.addImage(img,"JPEG",0,0,595,842);
   });
 
-  pdf.save("document.pdf");
+  pdf.save(name + ".pdf");
 }
 </script>
 
