@@ -18,14 +18,22 @@ h2 {
 
 button {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   margin-top: 10px;
   font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  background: #1e88e5;
+  color: white;
+}
+
+button.secondary {
+  background: #43a047;
 }
 
 img {
   max-width: 100%;
-  margin-top: 10px;
+  margin-top: 12px;
   border-radius: 6px;
   display: none;
 }
@@ -40,9 +48,13 @@ img {
 
 <h2>ROYYAN DOCUMENT SCANNER</h2>
 
+<!-- input tersembunyi -->
+<input type="file" accept="image/*" capture="environment" id="cameraInput" hidden>
+<input type="file" accept="image/*" id="galleryInput" hidden>
+
 <div class="section">
-  <input type="file" accept="image/*" capture="environment" id="cameraInput">
-  <input type="file" accept="image/*" id="galleryInput">
+  <button onclick="cameraInput.click()">📷 Ambil dari Kamera</button>
+  <button class="secondary" onclick="galleryInput.click()">🖼️ Ambil dari Galeri</button>
 </div>
 
 <img id="preview">
