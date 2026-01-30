@@ -2,142 +2,128 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ROYYAN DOCUMENT SCANNER</title>
-
-<script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
   font-family: Arial, sans-serif;
-  background: #f4f6f8;
-  padding: 15px;
+  background:#f5f5f5;
+  text-align:center;
+  padding:20px;
 }
 
-h2 { text-align:center; }
+h1 {
+  margin-bottom:5px;
+}
 
 button {
-  width:100%;
-  padding:14px;
-  margin-top:10px;
-  font-size:16px;
+  padding:12px 18px;
+  margin:8px;
   border:none;
-  border-radius:6px;
-  background:#1e88e5;
+  border-radius:8px;
+  background:#2563eb;
   color:white;
+  font-size:16px;
+}
+
+button.secondary {
+  background:#555;
+}
+
+canvas {
+  max-width:100%;
+  border:1px solid #ccc;
+  margin-top:10px;
 }
 
 img {
   max-width:100%;
   margin-top:10px;
-  border-radius:6px;
-  display:none;
-}
-
-#status {
-  text-align:center;
-  margin-top:10px;
-  font-weight:bold;
 }
 </style>
 </head>
 
 <body>
 
-<h2>ROYYAN DOCUMENT SCANNER</h2>
+<h1>ROYYAN DOCUMENT SCANNER</h1>
+<p>Personal Document Scanner</p>
 
-<input type="file" accept="image/*" capture="environment" id="cameraInput" hidden>
-<input type="file" accept="image/*" id="galleryInput" hidden>
+<input type="file" id="fileInput" accept="image/*" hidden>
 
-<button onclick="cameraInput.click()">📷 Ambil dari Kamera</button>
-<button onclick="galleryInput.click()">🖼️ Ambil dari Galeri</button>
+<br>
 
-<p id="status">⏳ Loading engine...</p>
+<button onclick="openFile()">📷 Kamera / Galeri</button>
 
-<img id="preview">
-<img id="result">
+<div id="preview"></div>
 
-<button id="autoCropBtn" disabled>✂️ Auto Crop Dokumen</button>
+<br>
+
+<button id="autoCropBtn" style="display:none" onclick="autoCrop()">AUTO CROP</button>
+<button id="manualCropBtn" style="display:none" onclick="manualCrop()">CROP ULANG</button>
+
+<br>
+
+<button id="downloadBtn" style="display:none" onclick="downloadImage()">DOWNLOAD</button>
+
+<canvas id="canvas"></canvas>
 
 <script>
-let cvReady = false;
+let img = new Image();
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
 
-function onOpenCvReady() {
-  cvReady = true;
-  document.getElementById("status").innerText = "✅ Engine siap";
-  document.getElementById("autoCropBtn").disabled = false;
+function openFile() {
+  document.getElementById("fileInput").click();
 }
 
-if (typeof cv !== "undefined") {
-  cv['onRuntimeInitialized'] = onOpenCvReady;
-}
+document.getElementById("fileInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-const preview = document.getElementById("preview");
-const result = document.getElementById("result");
-const autoCropBtn = document.getElementById("autoCropBtn");
-
-function handleFile(file) {
   const reader = new FileReader();
   reader.onload = () => {
-    preview.src = reader.result;
-    preview.style.display = "block";
-    result.style.display = "none";
+    img.src = reader.result;
+    document.getElementById("preview").innerHTML =
+      `<img src="${reader.result}">`;
+
+    document.getElementById("autoCropBtn").style.display = "inline-block";
   };
   reader.readAsDataURL(file);
+});
+
+function autoCrop() {
+  img.onload = () => {
+    canvas.width = img.width * 0.9;
+    canvas.height = img.height * 0.9;
+
+    ctx.drawImage(
+      img,
+      img.width * 0.05,
+      img.height * 0.05,
+      img.width * 0.9,
+      img.height * 0.9,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    document.getElementById("manualCropBtn").style.display = "inline-block";
+    document.getElementById("downloadBtn").style.display = "inline-block";
+  };
 }
 
-cameraInput.onchange = e => handleFile(e.target.files[0]);
-galleryInput.onchange = e => handleFile(e.target.files[0]);
+function manualCrop() {
+  alert("Crop ulang manual versi lanjut bisa ditambahkan berikutnya.");
+}
 
-autoCropBtn.onclick = () => {
-  if (!cvReady) return alert("Engine belum siap");
-
-  const img = new Image();
-  img.src = preview.src;
-  img.onload = () => {
-    const canvas = document.createElement("canvas");
-    canvas.width = img.width;
-    canvas.height = img.height;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0);
-
-    let src = cv.imread(canvas);
-    let gray = new cv.Mat();
-    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-
-    cv.GaussianBlur(gray, gray, new cv.Size(5,5), 0);
-    cv.Canny(gray, gray, 75, 200);
-
-    let contours = new cv.MatVector();
-    let hierarchy = new cv.Mat();
-    cv.findContours(gray, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-    let maxArea = 0;
-    let maxContour = null;
-
-    for (let i = 0; i < contours.size(); i++) {
-      const cnt = contours.get(i);
-      const area = cv.contourArea(cnt);
-      if (area > maxArea) {
-        maxArea = area;
-        maxContour = cnt;
-      }
-    }
-
-    if (!maxContour) {
-      alert("Dokumen tidak terdeteksi");
-      return;
-    }
-
-    const rect = cv.boundingRect(maxContour);
-    const cropped = src.roi(rect);
-
-    cv.imshow(result, cropped);
-    result.style.display = "block";
-
-    src.delete(); gray.delete(); contours.delete(); hierarchy.delete();
-  };
-};
+function downloadImage() {
+  const link = document.createElement("a");
+  link.download = "scan-document.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
 </script>
 
 </body>
