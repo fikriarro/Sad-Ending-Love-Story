@@ -2,129 +2,159 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>ROYYAN DOCUMENT SCANNER</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nasi Sudah Menjadi Bubur, Arang Telah Menjadi Abu</title>
 
 <style>
 body {
-  font-family: Arial, sans-serif;
-  background:#f5f5f5;
-  text-align:center;
-  padding:20px;
+    margin: 0;
+    font-family: Georgia, serif;
+    background: #0f0f0f;
+    color: #eee;
+    line-height: 1.8;
 }
 
-h1 {
-  margin-bottom:5px;
+.hero {
+    background: url("https://source.unsplash.com/1600x900/?lonely,couple") center/cover;
+    height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
-button {
-  padding:12px 18px;
-  margin:8px;
-  border:none;
-  border-radius:8px;
-  background:#2563eb;
-  color:white;
-  font-size:16px;
+.hero h1 {
+    background: rgba(0,0,0,0.6);
+    padding: 20px 30px;
+    border-radius: 10px;
+    font-size: 2.2em;
 }
 
-button.secondary {
-  background:#555;
+.container {
+    max-width: 800px;
+    margin: auto;
+    padding: 40px 20px;
 }
 
-canvas {
-  max-width:100%;
-  border:1px solid #ccc;
-  margin-top:10px;
+p {
+    margin-bottom: 20px;
 }
 
-img {
-  max-width:100%;
-  margin-top:10px;
+.quote {
+    font-style: italic;
+    text-align: center;
+    opacity: .8;
+}
+
+.img {
+    margin: 40px 0;
+}
+
+.img img {
+    width: 100%;
+    border-radius: 12px;
+}
+
+.footer {
+    text-align: center;
+    padding: 40px;
+    opacity: .5;
 }
 </style>
 </head>
 
 <body>
 
-<h1>ROYYAN DOCUMENT SCANNER</h1>
-<p>Personal Document Scanner</p>
+<div class="hero">
+<h1>Nasi Sudah Menjadi Bubur, Arang Telah Menjadi Abu</h1>
+</div>
 
-<input type="file" id="fileInput" accept="image/*" hidden>
+<div class="container">
 
-<br>
+<p>Mereka bertemu saat SMA.</p>
 
-<button onclick="openFile()">📷 Kamera / Galeri</button>
+<p>Di usia ketika cinta belum mengenal strategi, dan janji masih terasa sakral.</p>
 
-<div id="preview"></div>
+<p>Rizwan mengatakannya dengan nada tenang:</p>
 
-<br>
+<p class="quote">“Aku akan menikahimu suatu hari nanti.”</p>
 
-<button id="autoCropBtn" style="display:none" onclick="autoCrop()">AUTO CROP</button>
-<button id="manualCropBtn" style="display:none" onclick="manualCrop()">CROP ULANG</button>
+<div class="img">
+<img src="https://source.unsplash.com/800x500/?teen,love">
+</div>
 
-<br>
+<p>Rizwan bukan laki-laki biasa. Ia cerdas, multitalenta, cepat memahami banyak hal. Namun ada satu ruang dalam dirinya yang selalu kikuk: urusan perasaan.</p>
 
-<button id="downloadBtn" style="display:none" onclick="downloadImage()">DOWNLOAD</button>
+<p>Mereka menjalani hubungan bertahun-tahun. Awalnya penuh cerita. Namun waktu tidak merusak cinta secara tiba-tiba — ia mengikisnya perlahan.</p>
 
-<canvas id="canvas"></canvas>
+<p>Rizwan mulai merasa kosong. Bukan karena Nirmala berubah. Ia hanya lelah pada hidup.</p>
 
-<script>
-let img = new Image();
-let canvas = document.getElementById("canvas");
-let ctx = canvas.getContext("2d");
+<div class="img">
+<img src="https://source.unsplash.com/800x500/?sad,man">
+</div>
 
-function openFile() {
-  document.getElementById("fileInput").click();
-}
+<p>Sifat cueknya makin menjadi. Jawaban pesan pendek. Kadang tak datang sama sekali.</p>
 
-document.getElementById("fileInput").addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (!file) return;
+<p>Suatu malam ia berkata jujur, “Aku lagi ngerasa hambar.”</p>
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    img.src = reader.result;
-    document.getElementById("preview").innerHTML =
-      `<img src="${reader.result}">`;
+<p>Bagi Rizwan itu kelelahan mental. Bagi Nirmala, itu terdengar seperti kehilangan.</p>
 
-    document.getElementById("autoCropBtn").style.display = "inline-block";
-  };
-  reader.readAsDataURL(file);
-});
+<p>Nirmala membutuhkan kehadiran. Sekadar kabar. Sekadar perhatian.</p>
 
-function autoCrop() {
-  img.onload = () => {
-    canvas.width = img.width * 0.9;
-    canvas.height = img.height * 0.9;
+<p>Tapi Rizwan tenggelam dalam dunianya sendiri.</p>
 
-    ctx.drawImage(
-      img,
-      img.width * 0.05,
-      img.height * 0.05,
-      img.width * 0.9,
-      img.height * 0.9,
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
+<div class="img">
+<img src="https://source.unsplash.com/800x500/?waiting,woman">
+</div>
 
-    document.getElementById("manualCropBtn").style.display = "inline-block";
-    document.getElementById("downloadBtn").style.display = "inline-block";
-  };
-}
+<p>Mereka berpisah kota demi studi. Rizwan menyimpan keyakinan: nanti aku datang melamar.</p>
 
-function manualCrop() {
-  alert("Crop ulang manual versi lanjut bisa ditambahkan berikutnya.");
-}
+<p>Nirmala menunggu tanpa kepastian.</p>
 
-function downloadImage() {
-  const link = document.createElement("a");
-  link.download = "scan-document.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
-}
-</script>
+<p>Dan hukum jarak pun bekerja: yang hadir selalu lebih kuat dari yang hanya berniat.</p>
+
+<p>Datanglah Gopar.</p>
+
+<div class="img">
+<img src="https://source.unsplash.com/800x500/?new,couple">
+</div>
+
+<p>Tiga tahun Rizwan dikalahkan oleh tiga bulan kehadiran.</p>
+
+<p>Saat Rizwan kembali mencari, nasi sudah menjadi bubur. Arang telah menjadi abu.</p>
+
+<p>Nirmala mengaku telah membuka bab baru.</p>
+
+<p>Rizwan memaafkan. Meski dadanya sesak melihat senyum yang dulu miliknya kini bersama orang lain.</p>
+
+<p>Nirmala berkata dengan jujur:</p>
+
+<p class="quote">“Kamu itu pinter, Wan. Tapi kalau soal cinta, kamu bodoh banget. Udah tahu disakitin, masih mau.”</p>
+
+<div class="img">
+<img src="https://source.unsplash.com/800x500/?broken,heart">
+</div>
+
+<p>Rizwan tetap berharap. Berkali-kali memaafkan. Meski setiap maaf meninggalkan luka.</p>
+
+<p>Sampai akhirnya ia muak. Bukan pada cinta — tapi pada sikap keras kepala Nirmala yang memohon untuk dilupakan, mengubur kenangan.</p>
+
+<p>Dalam diam ia bertanya:</p>
+
+<p class="quote">“Kalau akhirnya begini… kenapa dulu kita memulai?”</p>
+
+<p>Rizwan pintar. Rizwan hebat.</p>
+
+<p>Tapi dalam cinta, ia terlalu naif.</p>
+
+<p>Dan ia belajar satu hal paling pahit:</p>
+
+<p class="quote">Kadang dua orang saling mencintai, namun gagal hadir di waktu yang sama.</p>
+
+</div>
+
+<div class="footer">
+© Kisah tentang jarak, diam, dan waktu.
+</div>
 
 </body>
 </html>
